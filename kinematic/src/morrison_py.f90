@@ -5,7 +5,7 @@ subroutine test(x,y)
 end subroutine test
 
 
-subroutine mphys_morrison_interface_2d(t2d,p2d,dz2d_wrf,qv2d,qr2d,qi2d,&
+subroutine mphys_morrison_interface_2d(t2d,p2d,dz2d_wrf,qc2d,qv2d,qr2d,qi2d,&
      ni2d,qs2d,qg2d,ns2d,nr2d,ng2d,w2d,nx1,nz1,dt1,&
      qc_tend2d, qi_tend2d, qni_tend2d, & 
      qr_tend2d, ni_tend2d, ns_tend2d, & 
@@ -123,6 +123,7 @@ print*, nz, nz1, nx, nx1
      !print*, qc1d
      !print*, t1d
      !print*, 'dt1',i,j
+     !print*, 'calling microphysics', qc1d(1:nz1)
      call morr_two_moment_micro(qc_tend1d(1:nz1), qi_tend1d(1:nz1), qni_tend1d(1:nz1), &
           qr_tend1d(1:nz1), ni_tend1d(1:nz1), ns_tend1d(1:nz1), nr_tend1d(1:nz1),             &
           qc1d(1:nz1), qi1d(1:nz1), qs1d(1:nz1), qr1d(1:nz1), ni1d(1:nz1), &

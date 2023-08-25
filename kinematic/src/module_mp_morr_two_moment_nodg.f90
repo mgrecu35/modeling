@@ -1712,6 +1712,9 @@ END SUBROUTINE MP_MORR_TWO_MOMENT
                     (PSMLT(K)+PGMLT(K)-PRACS(K)-PRACG(K))*XLF(K))/CPM(K)
 
       QC3DTEN(K) = QC3DTEN(K)+(-PRA(K)-PRC(K))
+      if(isnan(qc3dten(k))) then
+            print*, PRA(k),PRC(k),QC3D(k),QC3DTEN(k)
+      endif
       QR3DTEN(K) = QR3DTEN(K)+(PRE(K)+PRA(K)+PRC(K)-PSMLT(K)-PGMLT(K)+PRACS(K)+PRACG(K))
       QNI3DTEN(K) = QNI3DTEN(K)+(PSMLT(K)+EVPMS(K)-PRACS(K))
       QG3DTEN(K) = QG3DTEN(K)+(PGMLT(K)+EVPMG(K)-PRACG(K))
@@ -1775,6 +1778,9 @@ END SUBROUTINE MP_MORR_TWO_MOMENT
       QV3DTEN(K) = QV3DTEN(K)-PCC(K)
       T3DTEN(K) = T3DTEN(K)+PCC(K)*XXLV(K)/CPM(K)
       QC3DTEN(K) = QC3DTEN(K)+PCC(K)
+      if(isnan(qc3dten(k))) then
+            print*, PRA(k),PRC(k),QC3D(k),PCC(k)
+      endif
 
 !.......................................................................
 ! ACTIVATION OF CLOUD DROPLETS
@@ -2873,6 +2879,12 @@ END SUBROUTINE MP_MORR_TWO_MOMENT
       QC3DTEN(K) = QC3DTEN(K)+                                      &
                  (-PRA(K)-PRC(K)-MNUCCC(K)+PCC(K)-                  &
                   PSACWS(K)-PSACWI(K)-QMULTS(K)-QMULTG(K)-PSACWG(K)-PGSACW(K))
+      if(isnan(qc3d(k))) then
+                        print*, PRA(K),PRC(K),MNUCCC(K),PCC(K),                  &
+                        PSACWS(K),PSACWI(K),QMULTS(K),QMULTG(K),PSACWG(K),PGSACW(K)
+                        stop
+
+      endif
       QI3DTEN(K) = QI3DTEN(K)+                                      &
          (PRD(K)+EPRD(K)+PSACWI(K)+MNUCCC(K)-PRCI(K)-                                 &
                   PRAI(K)+QMULTS(K)+QMULTG(K)+QMULTR(K)+QMULTRG(K)+MNUCCD(K)-PRACI(K)-PRACIS(K))
@@ -3017,6 +3029,10 @@ END SUBROUTINE MP_MORR_TWO_MOMENT
         DUMFNR(K) = NR3D(K)+NR3DTEN(K)*DT
         DUMC(K) = QC3D(K)+QC3DTEN(K)*DT
         DUMFNC(K) = NC3D(K)+NC3DTEN(K)*DT
+        if(isnan(dumc(k))) then
+            print*, 'dumc',qc3d(k),qc3dten(k),dt
+            stop
+        endif
 	DUMG(K) = QG3D(K)+QG3DTEN(K)*DT
 	DUMFNG(K) = NG3D(K)+NG3DTEN(K)*DT
 
@@ -3244,6 +3260,11 @@ END SUBROUTINE MP_MORR_TWO_MOMENT
       NS3DTEN(K) = NS3DTEN(K)+FALTNDNS/NSTEP/RHO(k)
       NR3DTEN(K) = NR3DTEN(K)+FALTNDNR/NSTEP/RHO(k)
       QCSTEN(K) = QCSTEN(K)+FALTNDC/NSTEP/RHO(k)
+      if(isnan(qcsten(k))) then
+            print*, 'qcsten(k)',qcsten(k),faltndc,nstep,rho(k), dzq(k), faloutc(k+1), faloutc(k)
+            print*, 'FC=',FC(K),DUMC(K)
+            stop
+      endif
       NC3DTEN(K) = NC3DTEN(K)+FALTNDNC/NSTEP/RHO(k)
       QGSTEN(K) = QGSTEN(K)+FALTNDG/NSTEP/RHO(k)
       NG3DTEN(K) = NG3DTEN(K)+FALTNDNG/NSTEP/RHO(k)
@@ -3284,6 +3305,9 @@ END SUBROUTINE MP_MORR_TWO_MOMENT
         QR3DTEN(K)=QR3DTEN(K)+QRSTEN(K)
         QI3DTEN(K)=QI3DTEN(K)+QISTEN(K)
         QC3DTEN(K)=QC3DTEN(K)+QCSTEN(K)
+        if(isnan(qc3dten(k))) then
+            print*, QCSTEN(k),QC3DTEN(k),QCSTEN(K),FALOUTNC(K) 
+      endif
         QG3DTEN(K)=QG3DTEN(K)+QGSTEN(K)
         QNI3DTEN(K)=QNI3DTEN(K)+QNISTEN(K)
 

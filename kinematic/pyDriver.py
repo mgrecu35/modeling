@@ -63,6 +63,8 @@ xlong,xlat,press,theta,qv,qs,qg,qr,qc,qi,u,v,height_surf,\
     dbz,height,qns,qng,qnr,qnice=readWRF_File_Morr(fs[7])
 dbzm=np.ma.array(dbz,mask=(dbz<0.0))
 n1,n2=50,175
+xtL=[]
+ytL=[]
 for j0 in range(120,180):
      qs2d=qs[-1,:,j0,n1:n2]
      qr2d=qr[-1,:,j0,n1:n2]
@@ -104,10 +106,23 @@ for j0 in range(120,180):
      qc_tend2d,qi_tend2d,qs_tend2d,qr_tend2d,\
           ni_tend2d,ns_tend2d,nr_tend2d,t_tend2d,qv_tend2d,\
           qg_tend2d,ng_tend2d=kd.mphys_morrison_interface_2d(temp2d[:70,:].data,press2d[:70,:].data,dz2d_wrf[:70,:].data,\
-                                                             qv2d[:70,:].data,qr2d[:70,:].data,\
+                                                             qc2d[:70,:],qv2d[:70,:].data,qr2d[:70,:].data,\
                                                              qi2d[:70,:].data,qni2d[:70,:].data,qs2d[:70,:].data,qg2d[:70,:].data,qns2d[:70,:].data,\
                                                              qnr2d[:70,:].data,qng2d[:70,:].data,w2d[:70,:].data,dt1)
      
+     nz,nx=qc_tend2d.shape
+     xL,yL=[],[]
+     j1=0
+     for i in range(nx):
+          for j in range(1,59):
+               x1=[temp2d[j-j1:j+1,i],press2d[j-j1:j+1,i],dz2d_wrf[j-j1:j+1,i],qc2d[j-j1:j+1,i],qv2d[j-j1:j+1,i],qr2d[j-j1:j+1,i],\
+                   qi2d[j-j1:j+1,i],ni2d[j-j1:j+1,i],qs2d[j-j1:j+1,i],qg2d[j-j1:j+1,i],ns2d[j-j1:j+1,i],\
+               nr2d[j-j1:j+1,i],ng2d[j-j1:j+1,i]]
+               x1=np.array(x1).flatten()
+               y1=[t_tend2d[j,i],qc_tend2d[j,i],qi_tend2d[j,i],qs_tend2d[j,i],qr_tend2d[j,i],ni_tend2d[j,i],ns_tend2d[j,i],nr_tend2d[j,i],qv_tend2d[j,i],qg_tend2d[j,i],ng_tend2d[j,i]]
+               xtL.append(x1)
+               ytL.append(y1)
+               #stop
      h1=dz2d_wrf[:,0].cumsum()
      plt.figure(figsize=(8,10))
      plt.subplot(211)
@@ -124,4 +139,13 @@ for j0 in range(120,180):
      
      plt.savefig('tempTend_%3.3i.png'%j0)
      plt.close('all')
+
+ytL=np.array(ytL)
+xtL=np.array(xtL)
+import xarray as xr
+
+ds=xr.Dataset({'x':(['n','m'],xtL),'y':(['n','m2'],ytL)})
+encoding={'x':{'zlib':True,'complevel':9},'y':{'zlib':True,'complevel':9}}
+ds.to_netcdf('trainingData.nc',encoding=encoding)
+
      
