@@ -9,7 +9,7 @@ for i,var in enumerate(varList):
     if i%3==0:
         argnames+='&\n    '
     #c_argnames+='float *'+var+','
-argnames+='nx_py,ny_py,nz_py'
+argnames+='nx_py,ny_py,nz_py,ireturn_py'
 c_argnames+='int *nx,int *ny,int *nz'                
 %>
 

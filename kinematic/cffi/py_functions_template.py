@@ -4,8 +4,8 @@ c_argnames=''
 for var in varList:
     argnames+='cp_'+var+','
     c_argnames+='float *'+var+','
-argnames+='nx,ny,nz'
-c_argnames+='int *nx,int *ny,int *nz'                
+argnames+='nx,ny,nz,ireturn'
+c_argnames+='int *nx,int *ny,int *nz, int *ireturn'                
 %>
 
 import cffi
@@ -25,6 +25,7 @@ def emulator_interface_(${argnames}):
     %for dim in dimens:
     ${dim}_py=${dim}[0]
     %endfor
+    ireturn_py=ireturn[0]
     print('nx_py,ny_py,nz_py=',nx_py,ny_py,nz_py,'in emulator_interface_')
     %for var in varList:
     %if var!='dt':
@@ -33,6 +34,7 @@ def emulator_interface_(${argnames}):
     %endfor
     print('th=',th.mean(axis=(0,2)))
     print('qv=',qv_curr.mean(axis=(0,2)))
+    ireturn[0]=1
 """
 with open("plugin.h", "w") as f:
     f.write(header)
