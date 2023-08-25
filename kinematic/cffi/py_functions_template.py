@@ -25,11 +25,14 @@ def emulator_interface_(${argnames}):
     %for dim in dimens:
     ${dim}_py=${dim}[0]
     %endfor
+    print('nx_py,ny_py,nz_py=',nx_py,ny_py,nz_py,'in emulator_interface_')
     %for var in varList:
     %if var!='dt':
-    ${var} = np.frombuffer(ffi.buffer(cp_${var},nz_py*ny_py*nx_py*4),np.dtype('f4')).reshape(nx_py,ny_py,nz_py)
+    ${var} = np.frombuffer(ffi.buffer(cp_${var},nz_py*ny_py*nx_py*4),np.dtype('f4')).reshape(ny_py,nz_py,nx_py)
     %endif
     %endfor
+    print('th=',th.mean(axis=(0,2)))
+    print('qv=',qv_curr.mean(axis=(0,2)))
 """
 with open("plugin.h", "w") as f:
     f.write(header)
