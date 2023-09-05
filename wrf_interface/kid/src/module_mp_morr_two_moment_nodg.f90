@@ -4361,7 +4361,7 @@ SUBROUTINE MORR_TWO_MOMENT_MICRO2(QC3DTEN,QI3DTEN,QNI3DTEN,QR3DTEN,         &
              REAL, DIMENSION(KTS:KTE) ::   FNC,DUMFNR,FALOUTNR
              REAL FALTNDNR
              REAL, DIMENSION(KTS:KTE) ::   FNR
-             real :: cond1,acr
+             real :: cond1,cond2,acr
        
        ! FALL-SPEED PARAMETER 'A' WITH AIR DENSITY CORRECTION
        
@@ -4456,8 +4456,8 @@ SUBROUTINE MORR_TWO_MOMENT_MICRO2(QC3DTEN,QI3DTEN,QNI3DTEN,QR3DTEN,         &
              REAL, DIMENSION(KTS:KTE) ::  NR3D_IN            ! RAIN NUMBER CONCENTRATION (1/KG)
              REAL, DIMENSION(KTS:KTE) ::  QG3D_IN            ! GRAUPEL MIX RATIO (KG/KG)
              REAL, DIMENSION(KTS:KTE) ::  NG3D_IN            ! GRAUPEL NUMBER CONC (1/KG)
-             real, dimension(kts:kte) ::  zpos
-             real:: vterm_rain(kts:kte),vterm_snow(kts:kte),vterm_graup(kts:kte),qr_int(kts:kte)
+             real, dimension(kts:kte) ::  zpos, zpos_snow
+             real:: vterm_rain(kts:kte),vterm_snow(kts:kte),vterm_graup(kts:kte),qr_int(kts:kte),qs_int(kts:kte)
              real:: xf1,xf2
        !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
        
@@ -4492,7 +4492,7 @@ SUBROUTINE MORR_TWO_MOMENT_MICRO2(QC3DTEN,QI3DTEN,QNI3DTEN,QR3DTEN,         &
        ! LATENT HEAT OF SUBLIMATION
        
                   XXLS(K) = 3.15E6-2370.*T3D(K)+0.3337E6
-       
+                  XLF(K) = XXLS(K)-XXLV(K)
                   CPM(K) = CP*(1.+0.887*QV3D(K))
        
        ! SATURATION VAPOR PRESSURE AND MIXING RATIO
@@ -4514,7 +4514,11 @@ SUBROUTINE MORR_TWO_MOMENT_MICRO2(QC3DTEN,QI3DTEN,QNI3DTEN,QR3DTEN,         &
             !print*, qvqvs
             !print*, qc3d
             !print*, qr3d
-
+            zpos_snow=0
+            zpos=0
+            vterm_rain=0
+            vterm_snow=0
+            !return
             do k=kts,kte
                   if (qvqvs(k).gt.1) then
                         cond1=(qv3d(k)-qvs(k))
@@ -4522,28 +4526,57 @@ SUBROUTINE MORR_TWO_MOMENT_MICRO2(QC3DTEN,QI3DTEN,QNI3DTEN,QR3DTEN,         &
                         qv3d(k)=qvs(k)
                         t3d(k)=t3d(k)+cond1*xxlv(k)/cpm(k)
                   endif
+                  if (qvqvsi(k).gt.1.and.t3d(k).lt.273.15) then
+                        cond2=(qv3d(k)-qvi(k))
+                        qi3d(k)=qi3d(k)+cond2
+                        qv3d(k)=qvi(k)
+                        t3d(k)=t3d(k)+cond2*XXLs(k)/cpm(k)
+                  endif
                   if(rho(k)*qc3d(k).gt.1e-4) then
                         acr=qc3d(k)-1e-4/rho(k)
                         qc3d(k)=1e-4/rho(k)
                         qr3d(k)=qr3d(k)+acr
                   endif
+                  if(rho(k)*qi3d(k).gt.1e-4) then
+                        acr=qi3d(k)-1e-4/rho(k)
+                        qi3d(k)=1e-4/rho(k)
+                        qs3d(k)=qs3d(k)+acr
+                  endif
                   if(qr3d(k).gt.0) then
-                        vterm_rain(k)=29.1*(rho(k)*qr3d(k))**0.2*(rho(1)/rho(k))**0.6
+                        vterm_rain(k)=5.5*(1e3*qr3d(k))**0.125*(rho(1)/rho(k))**0.5
                         zpos(k)=vterm_rain(k)*dt
                   else
                         vterm_rain(k)=0
                         zpos(k)=0
                   end if
+                  if(qs3d(k).gt.0) then
+                        vterm_snow(k)=2.0*(1e3*qs3d(k))**0.1*(rho(1)/rho(k))**0.5
+                        zpos_snow(k)=vterm_snow(k)*dt
+                  else
+                        vterm_snow(k)=0
+                        zpos_snow(k)=0
+                  end if
+                  if(qs3d(k).gt.0.and.t3d(k).gt.273.15) then
+                        qr3d(k)=qr3d(k)+qs3d(k)
+                        T3D(K)=T3D(K)-qs3d(K)*XLF(K)/CPM(K)
+                        qs3d(k)=0
+                  endif
             enddo
+            !return
             qr_int=0
+            qs_int=0
             do k=kts,kte-1
                   xf1=zpos(k)
                   xf2=dzq(k+1)-zpos(k+1)
                   if(xf2<0) xf2=0
-                  !print*, xf1,xf2, rho(k)*qr3d(k)*1e3,rho(k+1)*qr3d(k+1)*1e3, rho(k)
                   qr_int(k)=(rho(k)*qr3d(k)*xf1+xf2*rho(k+1)*qr3d(k+1))/(xf1+xf2+0.1)/rho(k)
+                  xf1=zpos_snow(k)
+                  xf2=dzq(k+1)-zpos_snow(k+1)
+                  if(xf2<0) xf2=0
+                  qs_int(k)=(rho(k)*qs3d(k)*xf1+xf2*rho(k+1)*qs3d(k+1))/(xf1+xf2+0.1)/rho(k)
             enddo
             qr3d(kts:kte-1)=qr_int(kts:kte-1)
+            qs3d(kts:kte-1)=qs_int(kts:kte-1)
                   
       end subroutine SIMPLE_MICRO3
 
