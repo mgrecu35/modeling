@@ -10,7 +10,9 @@ subroutine mphys_morrison_interface_2d(t2d,p2d,dz2d_wrf,qc2d,qv2d,qr2d,qi2d,&
      qc_tend2d, qi_tend2d, qni_tend2d, & 
      qr_tend2d, ni_tend2d, ns_tend2d, & 
      nr_tend2d, t_tend2d, qv_tend2d, &
-     qg_tend2d, ng_tend2d)
+     qg_tend2d, ng_tend2d, qs_stend2d, &
+     qr_stend2d, qg_stend2d, &
+     nr_stend2d, ns_stend2d, ng_stend2d,qvs,qvi)
   use mphys_morr_two_moment
   implicit none
   integer :: nx1,nz1
@@ -24,7 +26,11 @@ subroutine mphys_morrison_interface_2d(t2d,p2d,dz2d_wrf,qc2d,qv2d,qr2d,qi2d,&
   real,intent(out) :: qc_tend2d(nz1,nx1), qi_tend2d(nz1,nx1), qni_tend2d(nz1,nx1), & 
        qr_tend2d(nz1,nx1), ni_tend2d(nz1,nx1), ns_tend2d(nz1,nx1), & 
        nr_tend2d(nz1,nx1), t_tend2d(nz1,nx1), qv_tend2d(nz1,nx1), &
-       qg_tend2d(nz1,nx1), ng_tend2d(nz1,nx1)
+       qg_tend2d(nz1,nx1), ng_tend2d(nz1,nx1), qs_stend2d(nz1,nx1), &
+       qr_stend2d(nz1,nx1), qg_stend2d(nz1,nx1), &
+       nr_stend2d(nz1,nx1), ns_stend2d(nz1,nx1), ng_stend2d(nz1,nx1),qvs(nz1,nx1),&
+       qvi(nz1,nx1) 
+
   
   real :: precprt2d, snowrt2d
   
@@ -57,13 +63,14 @@ subroutine mphys_morrison_interface_2d(t2d,p2d,dz2d_wrf,qc2d,qv2d,qr2d,qi2d,&
   
   real :: qgsten(nz), qrsten(nz), qisten(nz),  &
        qnisten(nz), qcsten(nz)
+  real :: qvs1d(nz),qvi1d(nz)
   
-print*, micro_unset
+!#print*, micro_unset
        if (micro_unset)then
           call morr_two_moment_init
           micro_unset=.False.
        end if
-print*, nz, nz1, nx, nx1
+!#print*, nz, nz1, nx, nx1
   
   do i=1,nx1
      !print*,'temp',t2d(:,i)
@@ -137,7 +144,9 @@ print*, nz, nz1, nx, nx1
           qg_tend1d(1:nz1), ng_tend1d(1:nz1), qg1d(1:nz1), &
           ng1d(1:nz1), effg1d(1:nz1),               & !effg1d graupel effective radius (microns)
           qrcu1d(1:nz1), qscu1d(1:nz1), qicu1d(1:nz1),                                 & !cumulus tendencies
-          qgsten(1:nz1), qrsten(1:nz1), qisten(1:nz1), qnisten(1:nz1), qcsten(1:nz1))                  !sedimentation tendencies
+          qgsten(1:nz1), qrsten(1:nz1), qisten(1:nz1), qnisten(1:nz1), qcsten(1:nz1),&
+          qvs1d(1:nz1),qvi1d(1:nz1))                  !sedimentation tendencies
+     
      ! t_tend1d, dt1
      qc_tend2d(:,i)=qc_tend1d(1:nz1)
      qi_tend2d(:,i)=qi_tend1d(1:nz1)
@@ -150,6 +159,14 @@ print*, nz, nz1, nx, nx1
      qg_tend2d(:,i)=qg_tend1d(1:nz1)
      ng_tend2d(:,i)=ng_tend1d(1:nz1)
      qv_tend2d(:,i)=qv_tend1d(1:nz1)
+     qs_stend2d(:,i)=qnisten(1:nz1)
+     qr_stend2d(:,i)=qrsten(1:nz1)
+     qg_stend2d(:,i)=qgsten(1:nz1)
+     nr_stend2d(:,i)=0
+     ns_stend2d(:,i)=0
+     ng_stend2d(:,i)=0
+     qvs(:,i)=qvs1d(1:nz1)
+     qvi(:,i)=qvi1d(1:nz1)
           ! save tendencies
        !do k=1,nz
        !   dtheta_mphys(k,i)=t_tend1d(k)/exner(k,i)

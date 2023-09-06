@@ -554,7 +554,7 @@ SUBROUTINE MP_MORR_TWO_MOMENT(ITIMESTEP,                       &
                             EFFC1D, EFFI1D, EFFS1D, EFFR1D,DZ1D,   &   ! HM ADD GRAUPEL
                             QG_TEND1D, NG_TEND1D, QG1D, NG1D, EFFG1D, &! ADD SEDIMENTATION TENDENCIES (UNITS OF KG/KG/S)
                             QGSTEN,QRSTEN, QISTEN, QNISTEN, QCSTEN, &! ADD CUMULUS TENDENCIES
-                            QRCU1D, QSCU1D, QICU1D
+                            QRCU1D, QSCU1D, QICU1D, qvs, qvi
 
 ! add cumulus tendencies
 
@@ -659,7 +659,7 @@ SUBROUTINE MP_MORR_TWO_MOMENT(ITIMESTEP,                       &
                                     QG_TEND1D,NG_TEND1D,QG1D,NG1D,EFFG1D, &
                                     qrcu1d, qscu1d, qicu1d, &
 ! ADD SEDIMENTATION TENDENCIES
-                                  QGSTEN,QRSTEN,QISTEN,QNISTEN,QCSTEN)
+                                  QGSTEN,QRSTEN,QISTEN,QNISTEN,QCSTEN,qvs,qvi)
 
    !
    ! Transfer 1D arrays back into 3D arrays
@@ -718,7 +718,7 @@ END SUBROUTINE MP_MORR_TWO_MOMENT
                                             IMS,IME, JMS,JME, KMS,KME,           &
                                             ITS,ITE, JTS,JTE, KTS,KTE,           & ! ADD GRAUPEL
                         QG3DTEN,NG3DTEN,QG3D,NG3D,EFFG,qrcu1d,qscu1d, qicu1d,    &
-                        QGSTEN,QRSTEN,QISTEN,QNISTEN,QCSTEN)
+                        QGSTEN,QRSTEN,QISTEN,QNISTEN,QCSTEN, qvs, qvi)
 
 !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
 ! THIS PROGRAM IS THE MAIN TWO-MOMENT MICROPHYSICS SUBROUTINE DESCRIBED BY
@@ -3018,7 +3018,7 @@ END SUBROUTINE MP_MORR_TWO_MOMENT
 !.......................................................................
 
       NSTEP = 1
-
+      !go to 400
       DO K = KTS,KTE
 
         DUMI(K) = QI3D(K)+QI3DTEN(K)*DT
@@ -3146,14 +3146,14 @@ END SUBROUTINE MP_MORR_TWO_MOMENT
 
 ! SET REALISTIC LIMITS ON FALLSPEED
 
-        UMS=MIN(UMS,1.2)
-        UNS=MIN(UNS,1.2)
-        UMI=MIN(UMI,1.2)
-        UNI=MIN(UNI,1.2)
-        UMR=MIN(UMR,9.1)
-        UNR=MIN(UNR,9.1)
-        UMG=MIN(UMG,20.)
-        UNG=MIN(UNG,20.)
+        UMS=0.0*MIN(UMS,1.2)
+        UNS=0*MIN(UNS,1.2)
+        UMI=0*MIN(UMI,1.2)
+        UNI=0*MIN(UNI,1.2)
+        UMR=0*MIN(UMR,9.1)
+        UNR=0*MIN(UNR,9.1)
+        UMG=0*MIN(UMG,20.)
+        UNG=0*MIN(UNG,20.)
 
       FR(K) = UMR
       FI(K) = UMI
