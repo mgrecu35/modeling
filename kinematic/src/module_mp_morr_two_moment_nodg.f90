@@ -3152,7 +3152,7 @@ END SUBROUTINE MP_MORR_TWO_MOMENT
         UNI=0*MIN(UNI,1.2)
         UMR=0*MIN(UMR,9.1)
         UNR=0*MIN(UNR,9.1)
-        UMG=0*MIN(UMG,20.)
+        UMG=0*MIN(UMG,20.) 
         UNG=0*MIN(UNG,20.)
 
       FR(K) = UMR

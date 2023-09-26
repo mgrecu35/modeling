@@ -13,7 +13,7 @@ subroutine mphys_morrison_interface_2d(t2d,p2d,dz2d_wrf,qc2d,qv2d,qr2d,qi2d,&
      qg_tend2d, ng_tend2d, qs_stend2d, &
      qr_stend2d, qg_stend2d, &
      nr_stend2d, ns_stend2d, ng_stend2d,qvs,qvi)
-  use mphys_morr_two_moment
+  use module_morr_two_moment
   implicit none
   integer :: nx1,nz1
   integer :: i, j, k, kts, kte
