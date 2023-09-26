@@ -63,6 +63,7 @@ qng_tendLc=[]
 qnr_tendLc=[]
 qni_tendLc=[]
 qv_tendLc=[]
+xL=[]
 #press_tendL=[]
 temp_tendLc=[]
 
@@ -105,9 +106,32 @@ def processFile(wrf_data,n1,n2,it,ncond,noprecip,ntot):
                                                             qi2d[:72,:].data,qni2d[:72,:].data,qs2d[:72,:].data,\
                                                             qg2d[:72,:].data,qns2d[:72,:].data,\
                                                             qnr2d[:72,:].data,qng2d[:72,:].data,w2d[:72,:].data,dt1)
-        a1=np.nonzero(qv2d[:72,:].data/qvs>=1.000)
-        b1=np.nonzero(temp2d[:72,:][a1].data>273.15)
-        c1=np.nonzero((qs2d[:72,:]+qg2d[:72,:])[a1][b1].data<1e-5)
+        nz,nxs=press2d[:72,:].shape
+        #stop
+        a1=np.nonzero(qv2d[:72,:].data/qvs<1.000)
+        #b1=np.nonzero()
+        b1=np.nonzero((qr2d[:72,:]+qs2d[:72,:]+qg2d[:72,:]+qi2d[:72,:]+qc2d[:72,:])[a1]<1e-5)
+        noprecip+=len(b1[0])
+        #ntot+=nz*nxs
+        # xvars='qr,qc,qi,qs,qg,press,temp,qv,qvs,qvi'
+        for i1 in range(nz):
+            for j1 in range(nxs):
+                ntot+=1
+                if qv2d[i1,j1]/qvs[i1,j1]>1.0001 or \
+                    (qr2d[i1,j1]+qs2d[i1,j1]+qg2d[i1,j1]+qi2d[i1,j1]+qc2d[i1,j1])>1e-6 or \
+                        qv2d[i1,j1]>qvi[i1,j1]:
+                    qr_tendLc.append(qr_tend2d[i1,j1])
+                    qc_tendLc.append(qc_tend2d[i1,j1])
+                    qi_tendLc.append(qi_tend2d[i1,j1])
+                    qg_tendLc.append(qg_tend2d[i1,j1])
+                    qs_tendLc.append(qs_tend2d[i1,j1])
+                    qv_tendLc.append(qv_tend2d[i1,j1])
+                    xL.append([qr2d[i1,j1],qc2d[i1,j1],qi2d[i1,j1],qs2d[i1,j1],qg2d[i1,j1],\
+                               press2d[i1,j1],temp2d[i1,j1],qv2d[i1,j1],qvs[i1,j1],qvi[i1,j1]])
+                
+                    ncond+=1
+        noprecip=ntot-ncond
+        continue
         qv_tendLc.extend(qv_tend2d[a1][b1][c1])
         qvLc.extend(qv2d[a1][b1][c1])
         qvsLc.extend(qvs[a1][b1][c1])
@@ -121,6 +145,7 @@ def processFile(wrf_data,n1,n2,it,ncond,noprecip,ntot):
         a1=np.nonzero(qc2d[:72,:].data+qr2d[:72,:].data+qi2d[:72,:].data+qs2d[:72,:].data+\
                       qg2d[:72,:].data<1e-8)
         noprecip+=len(a1[0])
+        
     print('fracts=',ncond/ntot,noprecip/ntot)
     return ncond,noprecip,ntot
     
@@ -141,12 +166,26 @@ qg_tendLc=np.array(qg_tendLc)
 qs_tendLc=np.array(qs_tendLc)
 qvsLc=np.array(qvsLc)
 qvLc=np.array(qvLc)
-print(np.corrcoef(qv_tendLc,qr_tendLc+qc_tendLc+qi_tendLc+qs_tendLc+qg_tendLc))
+#print(np.corrcoef(qv_tendLc,qr_tendLc+qc_tendLc+qi_tendLc+qs_tendLc+qg_tendLc))
 
-ax=plt.subplot(111)
-plt.scatter(qc_tendLc+qr_tendLc,qv_tendLc)
-plt.xlabel('qc+qr tendencies [g/g/s]]')
-plt.ylabel('qv tendency [g/g/s]')
-ax.set_aspect(1.0)
-plt.title('Tendencies at saturation')
-plt.savefig('tendencies_at_saturation_2.png')
+#ax=plt.subplot(111)
+#plt.scatter(qc_tendLc+qr_tendLc,qv_tendLc)
+#plt.xlabel('qc+qr tendencies [g/g/s]]')
+#plt.ylabel('qv tendency [g/g/s]')
+#ax.set_aspect(1.0)
+#plt.title('Tendencies at saturation')
+#plt.savefig('tendencies_at_saturation_2.png')
+xL=np.array(xL)
+import xarray as xr
+ds=xr.Dataset({'qr_tend':(['n'],qr_tendLc),'qc_tend':(['n'],qc_tendLc),'qi_tend':(['n'],qi_tendLc),\
+                'qg_tend':(['n'],qg_tendLc),'qs_tend':(['n'],qs_tendLc),\
+                'qv_tend':(['n'],qv_tendLc),'xL':(['n','m'],xL)})
+
+ds.to_netcdf('tendencies_training_data.nc',\
+             encoding={'xL':{'zlib':True,'complevel':5},\
+                    'qr_tend':{'zlib':True,'complevel':5},\
+                    'qc_tend':{'zlib':True,'complevel':5},\
+                    'qi_tend':{'zlib':True,'complevel':5},\
+                    'qg_tend':{'zlib':True,'complevel':5},\
+                    'qs_tend':{'zlib':True,'complevel':5},\
+                    'qv_tend':{'zlib':True,'complevel':5}})
