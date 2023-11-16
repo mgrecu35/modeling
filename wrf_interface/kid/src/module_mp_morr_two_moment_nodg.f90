@@ -4152,8 +4152,9 @@ SUBROUTINE MORR_TWO_MOMENT_MICRO2(QC3DTEN,QI3DTEN,QNI3DTEN,QR3DTEN,         &
        !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
        
        ! DECLARATIONS
-       
+            use tabulated_mp
              IMPLICIT NONE
+             
        
        !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
        ! THESE VARIABLES BELOW MUST BE LINKED WITH THE MAIN MODEL.
@@ -4459,6 +4460,7 @@ SUBROUTINE MORR_TWO_MOMENT_MICRO2(QC3DTEN,QI3DTEN,QNI3DTEN,QR3DTEN,         &
              real, dimension(kts:kte) ::  zpos, zpos_snow
              real:: vterm_rain(kts:kte),vterm_snow(kts:kte),vterm_graup(kts:kte),qr_int(kts:kte),qs_int(kts:kte)
              real:: xf1,xf2
+             real:: qvs_tables, supersat, fract1
        !CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC
        
        !KiD B.Shipway - input values can be modified before tendencies are calculated
@@ -4521,16 +4523,31 @@ SUBROUTINE MORR_TWO_MOMENT_MICRO2(QC3DTEN,QI3DTEN,QNI3DTEN,QR3DTEN,         &
             !return
             do k=kts,kte
                   if (qvqvs(k).gt.1) then
-                        cond1=(qv3d(k)-qvs(k))
-                        qc3d(k)=qc3d(k)+cond1
-                        qv3d(k)=qvs(k)
-                        t3d(k)=t3d(k)+cond1*xxlv(k)/cpm(k)
+                        call getqvs(t3d(k),pres(k),qvs_tables)
+                        supersat=(qv3d(k)-qvs_tables)/qvs_tables
+                        call get_condensation(t3d(k),pres(k),supersat,fract1)
+                        !print*, supersat, fract1
+                        cond1=(supersat-fract1)*qvs_tables
+                        if (cond1.gt.0) then
+                              cond1=min(cond1,0.99*qv3d(k))
+                              qc3d(k)=qc3d(k)+cond1
+                              qv3d(k)=qv3d(k)-cond1
+                              t3d(k)=t3d(k)+cond1*xxlv(k)/cpm(k)
+                        endif
                   endif
                   if (qvqvsi(k).gt.1.and.t3d(k).lt.273.15) then
-                        cond2=(qv3d(k)-qvi(k))
-                        qi3d(k)=qi3d(k)+cond2
-                        qv3d(k)=qvi(k)
-                        t3d(k)=t3d(k)+cond2*XXLs(k)/cpm(k)
+                        call getqvi(t3d(k),pres(k),qvs_tables)
+                        if(qvs_tables<990) then
+                              supersat=(qv3d(k)-qvs_tables)/qvs_tables
+                              call get_sublimation(t3d(k),pres(k),supersat,fract1)
+                              cond2=(supersat-fract1)*qvs_tables
+                              if(cond2.gt.0) then
+                                    cond2=min(cond1,0.99*qv3d(k))
+                                    qi3d(k)=qi3d(k)+cond2
+                                    qv3d(k)=qv3d(k)-cond2
+                                    t3d(k)=t3d(k)+cond2*XXLs(k)/cpm(k)
+                              endif
+                        endif
                   endif
                   if(rho(k)*qc3d(k).gt.1e-4) then
                         acr=qc3d(k)-1e-4/rho(k)
