@@ -25,7 +25,7 @@ c isw : collision kernel: 0 (long), 1 (hall), 2 (golovin)
 c read input variables
 c      print *,'enter dt,rq0,xmw,scal,isw'
 c      read *,dt,rq0,xmw,scal,isw
-       write(*,*)'parametros y condiciones iniciales'
+c       write(*,*)'parametros y condiciones iniciales'
       !dt = 1.
       rq0 = rq0_in
       rq0=rq0*1.e-04
